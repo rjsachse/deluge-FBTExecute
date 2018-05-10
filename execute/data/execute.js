@@ -53,6 +53,8 @@ Deluge.ux.ExecuteWindowBase = Ext.extend(Ext.Window, {
 				store: new Ext.data.ArrayStore({
 					fields: ['id', 'text'],
 					data: [
+						['fbtcomplete', _('FileBotTool Complete')],
+						['fbterror', _('FileBotTool Error')],
 						['complete', _('Torrent Complete')],
 						['added', _('Torrent Added')],
 						['removed', _('Torrent Removed')]
@@ -152,6 +154,8 @@ Deluge.ux.preferences.ExecutePage = Ext.extend(Ext.Panel, {
 	initComponent: function() {
 	    Deluge.ux.preferences.ExecutePage.superclass.initComponent.call(this);
 		var event_map = this.event_map = {
+			'fbtcomplete': _('FileBotTool Complete'),
+			'fbterror': _('FileBot Error'),
 			'complete': _('Torrent Complete'),
 			'added': _('Torrent Added'),
 			'removed': _('Torrent Removed')

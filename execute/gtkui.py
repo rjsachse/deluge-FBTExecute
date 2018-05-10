@@ -48,12 +48,14 @@ EXECUTE_EVENT = 1
 EXECUTE_COMMAND = 2
 
 EVENT_MAP = {
+    "fbtcomplete": _("FileBotTool Complete"),
+    "fbterror": _("FileBot Error"),
     "complete": _("Torrent Complete"),
     "added": _("Torrent Added"),
     "removed": _("Torrent Removed")
 }
 
-EVENTS = ["complete", "added", "removed"]
+EVENTS = ["fbtcomplete", "fbterror", "complete", "added", "removed"]
 
 class ExecutePreferences(object):
     def __init__(self, plugin):

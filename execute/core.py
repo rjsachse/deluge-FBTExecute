@@ -56,6 +56,8 @@ EXECUTE_EVENT = 1
 EXECUTE_COMMAND = 2
 
 EVENT_MAP = {
+    "fbtcomplete": "FileBotToolTorrentFinishedEvent",
+    "fbterror": "FileBotToolProcessingErrorEvent",
     "complete": "TorrentFinishedEvent",
     "added": "TorrentAddedEvent",
     "removed": "TorrentRemovedEvent"
