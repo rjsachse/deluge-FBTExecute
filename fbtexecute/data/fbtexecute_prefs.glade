@@ -2,9 +2,9 @@
 <glade-interface>
   <!-- interface-requires gtk+ 2.16 -->
   <!-- interface-naming-policy project-wide -->
-  <widget class="GtkWindow" id="execute_window">
+  <widget class="GtkWindow" id="fbtexecute_window">
     <child>
-      <widget class="GtkVBox" id="execute_box">
+      <widget class="GtkVBox" id="fbtexecute_box">
         <property name="visible">True</property>
         <child>
           <widget class="GtkFrame" id="add_frame">

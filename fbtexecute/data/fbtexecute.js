@@ -31,7 +31,7 @@ Copyright:
     statement from all source files in the program, then also delete it here.
 */
 Ext.ns('Deluge.ux');
-Deluge.ux.ExecuteWindowBase = Ext.extend(Ext.Window, {
+Deluge.ux.FBTExecuteWindowBase = Ext.extend(Ext.Window, {
 
 	layout: 'fit',
 	width: 400,
@@ -39,7 +39,7 @@ Deluge.ux.ExecuteWindowBase = Ext.extend(Ext.Window, {
 	closeAction: 'hide',
 
 	initComponent: function() {
-		Deluge.ux.ExecuteWindowBase.superclass.initComponent.call(this);
+		Deluge.ux.FBTExecuteWindowBase.superclass.initComponent.call(this);
 		this.addButton(_('Cancel'), this.onCancelClick, this);
 
 		this.form = this.add({
@@ -53,11 +53,11 @@ Deluge.ux.ExecuteWindowBase = Ext.extend(Ext.Window, {
 				store: new Ext.data.ArrayStore({
 					fields: ['id', 'text'],
 					data: [
-						['fbtcomplete', _('FileBotTool Complete')],
-						['fbterror', _('FileBotTool Error')],
 						['complete', _('Torrent Complete')],
 						['added', _('Torrent Added')],
-						['removed', _('Torrent Removed')]
+						['removed', _('Torrent Removed')],
+						['fbtcomplete', _('FileBotTool Complete')],
+						['fbterror', _('FileBotTool Error')]
 					]
 				}),
 				name: 'event',
@@ -80,12 +80,12 @@ Deluge.ux.ExecuteWindowBase = Ext.extend(Ext.Window, {
 	}
 });
 
-Deluge.ux.EditExecuteCommandWindow = Ext.extend(Deluge.ux.ExecuteWindowBase, {
+Deluge.ux.EditFBTExecuteCommandWindow = Ext.extend(Deluge.ux.FBTExecuteWindowBase, {
 
 	title: _('Edit Command'),
 
 	initComponent: function() {
-		Deluge.ux.EditExecuteCommandWindow.superclass.initComponent.call(this);
+		Deluge.ux.EditFBTExecuteCommandWindow.superclass.initComponent.call(this);
 		this.addButton(_('Save'), this.onSaveClick, this);
 		this.addEvents({
 			'commandedit': true
@@ -93,7 +93,7 @@ Deluge.ux.EditExecuteCommandWindow = Ext.extend(Deluge.ux.ExecuteWindowBase, {
 	},
 
 	show: function(command) {
-		Deluge.ux.EditExecuteCommandWindow.superclass.show.call(this);
+		Deluge.ux.EditFBTExecuteCommandWindow.superclass.show.call(this);
 		this.command = command;
 		this.form.getForm().setValues({
 			event: command.get('event'),
@@ -103,7 +103,7 @@ Deluge.ux.EditExecuteCommandWindow = Ext.extend(Deluge.ux.ExecuteWindowBase, {
 
 	onSaveClick: function() {
 		var values = this.form.getForm().getFieldValues();
-		deluge.client.execute.save_command(this.command.id, values.event, values.command, {
+		deluge.client.fbtexecute.save_command(this.command.id, values.event, values.command, {
 			success: function() {
 				this.fireEvent('commandedit', this, values.event, values.command);
 			},
@@ -114,12 +114,12 @@ Deluge.ux.EditExecuteCommandWindow = Ext.extend(Deluge.ux.ExecuteWindowBase, {
 
 });
 
-Deluge.ux.AddExecuteCommandWindow = Ext.extend(Deluge.ux.ExecuteWindowBase, {
+Deluge.ux.AddFBTExecuteCommandWindow = Ext.extend(Deluge.ux.ExecuteWindowBase, {
 
 	title: _('Add Command'),
 
 	initComponent: function() {
-		Deluge.ux.AddExecuteCommandWindow.superclass.initComponent.call(this);
+		Deluge.ux.AddFBTExecuteCommandWindow.superclass.initComponent.call(this);
 		this.addButton(_('Add'), this.onAddClick, this);
 		this.addEvents({
 			'commandadd': true
@@ -128,7 +128,7 @@ Deluge.ux.AddExecuteCommandWindow = Ext.extend(Deluge.ux.ExecuteWindowBase, {
 
 	onAddClick: function() {
 		var values = this.form.getForm().getFieldValues();
-		deluge.client.execute.add_command(values.event, values.command, {
+		deluge.client.fbtexecute.add_command(values.event, values.command, {
 			success: function() {
 				this.fireEvent('commandadd', this, values.event, values.command);
 			},
@@ -142,23 +142,23 @@ Deluge.ux.AddExecuteCommandWindow = Ext.extend(Deluge.ux.ExecuteWindowBase, {
 Ext.ns('Deluge.ux.preferences');
 
 /**
- * @class Deluge.ux.preferences.ExecutePage
+ * @class Deluge.ux.preferences.FBTExecutePage
  * @extends Ext.Panel
  */
-Deluge.ux.preferences.ExecutePage = Ext.extend(Ext.Panel, {
+Deluge.ux.preferences.FBTExecutePage = Ext.extend(Ext.Panel, {
 
-	title: _('Execute'),
+	title: _('FBTExecute'),
 	layout: 'fit',
 	border: false,
 
 	initComponent: function() {
-	    Deluge.ux.preferences.ExecutePage.superclass.initComponent.call(this);
+	    Deluge.ux.preferences.FBTExecutePage.superclass.initComponent.call(this);
 		var event_map = this.event_map = {
-			'fbtcomplete': _('FileBotTool Complete'),
-			'fbterror': _('FileBot Error'),
 			'complete': _('Torrent Complete'),
 			'added': _('Torrent Added'),
-			'removed': _('Torrent Removed')
+			'removed': _('Torrent Removed'),
+			'fbtcomplete': _('FileBotTool Complete'),
+			'fbterror': _('FileBot Error'),
 		}
 
 		this.list = new Ext.list.ListView({
@@ -218,7 +218,7 @@ Deluge.ux.preferences.ExecutePage = Ext.extend(Ext.Panel, {
 	},
 
 	updateCommands: function() {
-	    deluge.client.execute.get_commands({
+	    deluge.client.fbtexecute.get_commands({
 			success: function(commands) {
 				this.list.getStore().loadData(commands);
 			},
@@ -228,7 +228,7 @@ Deluge.ux.preferences.ExecutePage = Ext.extend(Ext.Panel, {
 
 	onAddClick: function() {
 		if (!this.addWin) {
-			this.addWin = new Deluge.ux.AddExecuteCommandWindow();
+			this.addWin = new Deluge.ux.AddFBTExecuteCommandWindow();
 			this.addWin.on('commandadd', function() {
 				this.updateCommands();
 			}, this);
@@ -245,7 +245,7 @@ Deluge.ux.preferences.ExecutePage = Ext.extend(Ext.Panel, {
 
 	onEditClick: function() {
 		if (!this.editWin) {
-			this.editWin = new Deluge.ux.EditExecuteCommandWindow();
+			this.editWin = new Deluge.ux.EditFBTExecuteCommandWindow();
 			this.editWin.on('commandedit', function() {
 				this.updateCommands();
 			}, this);
@@ -278,16 +278,16 @@ Deluge.ux.preferences.ExecutePage = Ext.extend(Ext.Panel, {
 	}
 });
 
-Deluge.plugins.ExecutePlugin = Ext.extend(Deluge.Plugin, {
+Deluge.plugins.FBTExecutePlugin = Ext.extend(Deluge.Plugin, {
 
-	name: 'Execute',
+	name: 'FBTExecute',
 
 	onDisable: function() {
 	    deluge.preferences.removePage(this.prefsPage);
 	},
 
 	onEnable: function() {
-		this.prefsPage = deluge.preferences.addPage(new Deluge.ux.preferences.ExecutePage());
+		this.prefsPage = deluge.preferences.addPage(new Deluge.ux.preferences.FBTExecutePage());
 	}
 });
-Deluge.registerPlugin('Execute', Deluge.plugins.ExecutePlugin);
+Deluge.registerPlugin('FBTExecute', Deluge.plugins.FBTExecutePlugin);

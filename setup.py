@@ -39,10 +39,10 @@
 
 from setuptools import setup, find_packages
 
-__plugin_name__ = "Execute"
+__plugin_name__ = "FBTExecute"
 __author__ = "Damien Churchill, rjsachse"
 __author_email__ = "damoxc@gmail.com"
-__version__ = "1.3.1"
+__version__ = "0.2"
 __url__ = "https://github.com/RjSachse/deluge-FBTExecute"
 __license__ = "GPLv3"
 __description__ = "Plugin to execute a command upon an event PLUS FileBotTool Event integration"

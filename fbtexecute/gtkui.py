@@ -48,22 +48,22 @@ EXECUTE_EVENT = 1
 EXECUTE_COMMAND = 2
 
 EVENT_MAP = {
-    "fbtcomplete": _("FileBotTool Complete"),
-    "fbterror": _("FileBot Error"),
     "complete": _("Torrent Complete"),
     "added": _("Torrent Added"),
-    "removed": _("Torrent Removed")
+    "removed": _("Torrent Removed"),
+    "fbtcomplete": _("FileBotTool Complete"),
+    "fbterror": _("FileBot Error")
 }
 
-EVENTS = ["fbtcomplete", "fbterror", "complete", "added", "removed"]
+EVENTS = ["complete", "added", "removed", "fbtcomplete", "fbterror"]
 
-class ExecutePreferences(object):
+class FBTExecutePreferences(object):
     def __init__(self, plugin):
         self.plugin = plugin
 
     def load(self):
-        log.debug("Adding Execute Preferences page")
-        self.glade = gtk.glade.XML(self.get_resource("execute_prefs.glade"))
+        log.debug("Adding FBTExecute Preferences page")
+        self.glade = gtk.glade.XML(self.get_resource("fbtexecute_prefs.glade"))
         self.glade.signal_autoconnect({
             "on_add_button_clicked": self.on_add_button_clicked
         })
@@ -77,23 +77,23 @@ class ExecutePreferences(object):
         events.set_model(store)
         events.set_active(0)
 
-        self.plugin.add_preferences_page(_("Execute"),
-            self.glade.get_widget("execute_box"))
+        self.plugin.add_preferences_page(_("FBTExecute"),
+            self.glade.get_widget("fbtexecute_box"))
         self.plugin.register_hook("on_show_prefs", self.load_commands)
         self.plugin.register_hook("on_apply_prefs", self.on_apply_prefs)
 
         self.load_commands()
 
-        client.register_event_handler("ExecuteCommandAddedEvent", self.on_command_added_event)
-        client.register_event_handler("ExecuteCommandRemovedEvent", self.on_command_removed_event)
+        client.register_event_handler("FBTExecuteCommandAddedEvent", self.on_command_added_event)
+        client.register_event_handler("FBTExecuteCommandRemovedEvent", self.on_command_removed_event)
 
     def unload(self):
-        self.plugin.remove_preferences_page(_("Execute"))
+        self.plugin.remove_preferences_page(_("FBTExecute"))
         self.plugin.deregister_hook("on_apply_prefs", self.on_apply_prefs)
         self.plugin.deregister_hook("on_show_prefs", self.load_commands)
 
     def get_resource(self, filename):
-        return pkg_resources.resource_filename("execute", os.path.join("data",
+        return pkg_resources.resource_filename("fbtexecute", os.path.join("data",
             filename))
 
     def add_command(self, command_id, event, command):
@@ -140,17 +140,17 @@ class ExecutePreferences(object):
                 command_id, event, command = command
                 self.add_command(command_id, event, command)
 
-        client.execute.get_commands().addCallback(on_get_commands)
+        client.fbtexecute.get_commands().addCallback(on_get_commands)
 
     def on_add_button_clicked(self, *args):
         command = self.glade.get_widget("command_entry").get_text()
         events = self.glade.get_widget("event_combobox")
         event = events.get_model()[events.get_active()][1]
-        client.execute.add_command(event, command)
+        client.fbtexecute.add_command(event, command)
 
     def on_remove_button_clicked(self, widget, *args):
         command_id = widget.get_name().replace("remove_", "")
-        client.execute.remove_command(command_id)
+        client.fbtexecute.remove_command(command_id)
 
     def on_apply_prefs(self):
         vbox = self.glade.get_widget("commands_vbox")
@@ -160,7 +160,7 @@ class ExecutePreferences(object):
             for widget in child.get_children():
                 if type(widget) == gtk.Entry:
                     command = widget.get_text()
-            client.execute.save_command(command_id, event, command)
+            client.fbtexecute.save_command(command_id, event, command)
 
     def on_command_added_event(self, command_id, event, command):
         log.debug("Adding command %s: %s", event, command)
@@ -174,7 +174,7 @@ class GtkUI(GtkPluginBase):
 
     def enable(self):
         self.plugin = component.get("PluginManager")
-        self.preferences = ExecutePreferences(self.plugin)
+        self.preferences = FBTExecutePreferences(self.plugin)
         self.preferences.load()
 
     def disable(self):

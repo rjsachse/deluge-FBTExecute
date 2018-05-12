@@ -56,15 +56,15 @@ EXECUTE_EVENT = 1
 EXECUTE_COMMAND = 2
 
 EVENT_MAP = {
-    "fbtcomplete": "FileBotToolTorrentFinishedEvent",
-    "fbterror": "FileBotToolProcessingErrorEvent",
     "complete": "TorrentFinishedEvent",
     "added": "TorrentAddedEvent",
-    "removed": "TorrentRemovedEvent"
+    "removed": "TorrentRemovedEvent",
+    "fbtcomplete": "FileBotToolTorrentFinishedEvent",
+    "fbterror": "FileBotToolProcessingErrorEvent"
 }
 
 
-class ExecuteCommandAddedEvent(DelugeEvent):
+class FBTExecuteCommandAddedEvent(DelugeEvent):
     """
     Emitted when a new command is added.
     """
@@ -72,7 +72,7 @@ class ExecuteCommandAddedEvent(DelugeEvent):
         self._args = [command_id, event, command]
 
 
-class ExecuteCommandRemovedEvent(DelugeEvent):
+class FBTExecuteCommandRemovedEvent(DelugeEvent):
     """
     Emitted when a command is removed.
     """
@@ -82,7 +82,7 @@ class ExecuteCommandRemovedEvent(DelugeEvent):
 
 class Core(CorePluginBase):
     def enable(self):
-        self.config = ConfigManager("execute.conf", DEFAULT_CONFIG)
+        self.config = ConfigManager("fbtexecute.conf", DEFAULT_CONFIG)
         event_manager = component.get("EventManager")
         self.torrent_manager = component.get("TorrentManager")
         self.registered_events = {}
@@ -95,8 +95,8 @@ class Core(CorePluginBase):
                 continue
 
             def create_event_handler(event):
-                def event_handler(torrent_id):
-                    self.execute_commands(torrent_id, event)
+                def event_handler(torrent_id, *arg):
+                    self.fbtexecute_commands(torrent_id, event, *arg)
                 return event_handler
             event_handler = create_event_handler(event)
             event_manager.register_event_handler(EVENT_MAP[event], event_handler)
@@ -104,7 +104,7 @@ class Core(CorePluginBase):
                 event_manager.register_event_handler("PreTorrentRemovedEvent", self.on_preremoved)
             self.registered_events[event] = event_handler
 
-        log.debug("Execute core plugin enabled!")
+        log.debug("FBTExecute core plugin enabled!")
 
     def on_preremoved(self, torrent_id):
         # Get and store the torrent info before it is removed
@@ -113,7 +113,7 @@ class Core(CorePluginBase):
         self.preremoved_cache[torrent_id] = [utf8_encoded(torrent_id), utf8_encoded(info["name"]),
                                               utf8_encoded(info["save_path"])]
 
-    def execute_commands(self, torrent_id, event):
+    def fbtexecute_commands(self, torrent_id, event, *arg):
         if event == "added" and not self.torrent_manager.session_started:
             return
         elif event == "removed":
@@ -126,16 +126,16 @@ class Core(CorePluginBase):
             torrent_name = utf8_encoded(info["name"])
             save_path = utf8_encoded(info["save_path"])
 
-        log.debug("[execute] Running commands for %s", event)
+        log.debug("[fbtexecute] Running commands for %s", event)
 
         def log_error(result, command):
             (stdout, stderr, exit_code) = result
             if exit_code:
-                log.warn("[execute] command '%s' failed with exit code %d", command, exit_code)
+                log.warn("[fbtexecute] command '%s' failed with exit code %d", command, exit_code)
                 if stdout:
-                    log.warn("[execute] stdout: %s", stdout)
+                    log.warn("[fbtexecute] stdout: %s", stdout)
                 if stderr:
-                    log.warn("[execute] stderr: %s", stderr)
+                    log.warn("[ftbexecute] stderr: %s", stderr)
 
         # Go through and execute all the commands
         for command in self.config["commands"]:
@@ -149,18 +149,18 @@ class Core(CorePluginBase):
                     cmd_args = [arg.replace("&", "^^^&") for arg in cmd_args]
 
                 if os.path.isfile(command) and os.access(command, os.X_OK):
-                    log.debug("[execute] Running %s with args: %s", command, cmd_args)
+                    log.debug("[ftbexecute] Running %s with args: %s", command, cmd_args)
                     d = getProcessOutputAndValue(command, cmd_args, env=os.environ)
                     d.addCallback(log_error, command)
                 else:
-                    log.error("[execute] Execute script not found or not executable")
+                    log.error("[ftbexecute] Execute script not found or not executable")
 
     def disable(self):
         self.config.save()
         event_manager = component.get("EventManager")
         for event, handler in self.registered_events.iteritems():
             event_manager.deregister_event_handler(event, handler)
-        log.debug("Execute core plugin disabled!")
+        log.debug("FBTExecute core plugin disabled!")
 
     ### Exported RPC methods ###
     @export
@@ -179,7 +179,7 @@ class Core(CorePluginBase):
         for command in self.config["commands"]:
             if command[EXECUTE_ID] == command_id:
                 self.config["commands"].remove(command)
-                component.get("EventManager").emit(ExecuteCommandRemovedEvent(command_id))
+                component.get("EventManager").emit(FBTExecuteCommandRemovedEvent(command_id))
                 break
         self.config.save()
 
